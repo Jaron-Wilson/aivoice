@@ -12,6 +12,8 @@ export GEMINI_API_KEY=KEY
 """
 
 import os
+
+import markdown
 import pyaudio
 import keyboard
 import wave
@@ -115,4 +117,18 @@ else:
     genai.delete_file(file.name)
     print(f'Deleted from GEMINI {file.display_name}.')
     print("\n\nSpeech to text looks like this: \n" + response.text)
-    print("\n\nAnswer to your question is this:\n" + responseAnswer.text)
+    # print("\n\nAnswer to your question is this:\n\n" + responseAnswer.text)
+    filename = 'index.html'
+    if os.path.exists(filename):
+        os.remove(filename)
+        print(f"{filename} has been deleted.")
+    else:
+        print(f"{filename} does not exist, so no deletion was necessary.")
+    html = markdown.markdown(responseAnswer.text)
+    # Open the file in write mode
+    with open(filename, 'w') as file:
+        # Write the HTML string to the file
+        file.write(html)
+
+    print(f"HTML content has been written to {filename}")
+
