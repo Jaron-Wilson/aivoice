@@ -99,7 +99,7 @@ chat_session = model.start_chat(
             "role": "user",
             "parts": [
                 file,
-                "convert this into text, if you hear nothing output (NONE)",
+                "convert this into text",
             ],
         },
     ]
@@ -107,7 +107,7 @@ chat_session = model.start_chat(
 
 response = chat_session.send_message("INSERT_INPUT_HERE")
 
-if response.text in "NONE":
+if "Please provide me with" in response.text:
     print("\n\nI hear nothing!: \n" + response.text)
 else:
     responseAnswer = chat_session.send_message("Answer to your best ability: " + response.text)
