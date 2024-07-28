@@ -17,6 +17,7 @@ import keyboard
 import wave
 
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -79,23 +80,26 @@ generation_config = {
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",
     generation_config=generation_config,
-    # safety_settings = Adjust safety settings
+    safety_settings={
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+    }
     # See https://ai.google.dev/gemini-api/docs/safety-settings
 )
 
 # TODO Make these files available on the local file system
 # You may need to update the file paths
-files = [
-    upload_to_gemini("temp_audio.wav", mime_type="audio/wav"),
-]
+file = upload_to_gemini("temp_audio.wav", mime_type="audio/wav")
 
 chat_session = model.start_chat(
     history=[
         {
             "role": "user",
             "parts": [
-                files[0],
-                "convert this into text",
+                file,
+                "convert this into text, if you hear nothing output (NONE)",
             ],
         },
     ]
@@ -103,7 +107,12 @@ chat_session = model.start_chat(
 
 response = chat_session.send_message("INSERT_INPUT_HERE")
 
-responseAnswer = chat_session.send_message("Answer to your best ability: " + response.text)
+if response.text in "NONE":
+    print("\n\nI hear nothing!: \n" + response.text)
+else:
+    responseAnswer = chat_session.send_message("Answer to your best ability: " + response.text)
 
-print("\n\nSpeech to text looks like this: \n" + response.text)
-print("\n\nAnswer to your question is this:\n" + responseAnswer.text)
+    genai.delete_file(file.name)
+    print(f'Deleted from GEMINI {file.display_name}.')
+    print("\n\nSpeech to text looks like this: \n" + response.text)
+    print("\n\nAnswer to your question is this:\n" + responseAnswer.text)
